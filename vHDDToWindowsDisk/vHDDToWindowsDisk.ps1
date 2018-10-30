@@ -24,7 +24,7 @@
 	
     .NOTES
     Name:           vHDDToWindowsDisk.ps1
-    Version:        1.1
+    Version:        1.2
     Author:         Mark Southall
 
     .LINK
@@ -38,7 +38,9 @@
 #>
 
 Param (
+  [Parameter(Mandatory=$true)]
   [string]$vmName,
+  [Parameter(Mandatory=$true)]
   [string]$vCenter,
   [string]$outputDir
 )
