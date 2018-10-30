@@ -10,18 +10,25 @@
 
     .PARAMETER vCenter 
     vCenter host
+	
+	.PARAMETER outputDir
+	Directory to output CSV, no trailing slash
 
     .EXAMPLE
     vHDDToWindowsDisk.ps1 -vmName "Server1" -vCenter "vCenter.local"
     Match vHDDs on Server1 to Windows Disks
 
+	.EXAMPLE
+    vHDDToWindowsDisk.ps1 -vmName "Server1" -vCenter "vCenter.local" -outputDir "C:\Misc"
+    Match vHDDs on Server1 to Windows Disks and output CSV to C:\Misc
+	
     .NOTES
     Name:           vHDDToWindowsDisk.ps1
-    Version:        1.0
+    Version:        1.1
     Author:         Mark Southall
 
     .LINK
-    https://communities.vmware.com/message/2707246?tstart=0#2707246 - adapted FMONs Script
+    https://github.com/MarkSouthall/PowershellScripts/blob/master/vHDDToWindowsDisk/vHDDToWindowsDisk.ps1 - adapted FMONs Script
 
     .PREREQUISITE
     - User for vCenter with appropriate rights
@@ -32,7 +39,8 @@
 
 Param (
   [string]$vmName,
-  [string]$vCenter
+  [string]$vCenter,
+  [string]$outputDir
 )
 Add-PSSnapin "Vmware.VimAutomation.Core" 
 $cred = if ($cred){$cred}else{Get-Credential}  
@@ -126,6 +134,11 @@ foreach ($vmHardDisk in $vmHardDisks)
 }  
   
 #sort and then output the results  
-$results | export-csv -path "c:\Misc\$($vmName)drive_matches.csv"
+if($outputDir)
+{
+  $outputFile = "${vmName}_drive_matches.csv"
+  $outputFilePath = Join-Path $outputDir $outputFile
+  $results | export-csv -path $outputFilePath
+}
 $results = $results | sort {[int]$_.vmHardDiskName.split(' ')[2]}  
 $results | ft -AutoSize  
