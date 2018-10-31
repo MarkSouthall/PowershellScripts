@@ -7,6 +7,9 @@
 
     .PARAMETER vmName 
     Name of the VM
+	
+	.PARAMETER hostName 
+    VM hostname (if different from vmName, or different domain to be specified)
 
     .PARAMETER vCenter 
     vCenter host
