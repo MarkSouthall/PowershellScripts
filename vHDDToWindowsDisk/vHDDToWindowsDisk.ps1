@@ -24,7 +24,7 @@
 	
     .NOTES
     Name:           vHDDToWindowsDisk.ps1
-    Version:        1.2
+    Version:        1.3
     Author:         Mark Southall
 
     .LINK
@@ -38,21 +38,30 @@
 #>
 
 Param (
-  [Parameter(Mandatory=$true)]
+  [Parameter(Mandatory=$true, HelpMessage = 'Enter VM Name as displayed in vCenter')]
   [string]$vmName,
-  [Parameter(Mandatory=$true)]
+  [Parameter(Mandatory=$true, HelpMessage = 'Enter the VM hostname if different from VM Name, or different domain. Blank for same value.')]
+  [AllowEmptyString()]
+  [string]$hostName,
+  [Parameter(Mandatory=$true, HelpMessage = 'Enter the vCenter hostname')]
   [string]$vCenter,
+  [Parameter(Mandatory=$true, HelpMessage = 'Enter directory to output CSV file, blank for no output')]
+  [AllowEmptyString()]
   [string]$outputDir
 )
+
 Add-PSSnapin "Vmware.VimAutomation.Core" 
 $cred = if ($cred){$cred}else{Get-Credential}  
 Connect-VIServer -Server $vCenter -Credential $cred
 
 ## modification below here not necessary to run ##  
-  
+if(-not $hostName)
+{
+  $hostName = $vmName
+}
   
 #get windows disks via wmi  
-$win32DiskDrive  = Get-WmiObject -Class Win32_DiskDrive -ComputerName $vmName -Credential $cred
+$win32DiskDrive  = Get-WmiObject -Class Win32_DiskDrive -ComputerName $hostName -Credential $cred
   
 #get vm hard disks and vm datacenter and virtual disk manager via PowerCLI  
 #does not connect to a vi server for you!  you should already be connected to the appropraite vi server.  
@@ -100,11 +109,11 @@ foreach ($vmHardDisk in $vmHardDisks)
   }
   
   $deviceID = $windowsDisk.DeviceID.Replace("\","\\")
-  $partitions = Get-WmiObject -query "Associators of {Win32_DiskDrive.DeviceID=""$deviceID""} WHERE AssocClass = Win32_DiskDriveToDiskPartition" -ComputerName $vmName -Credential $cred
+  $partitions = Get-WmiObject -query "Associators of {Win32_DiskDrive.DeviceID=""$deviceID""} WHERE AssocClass = Win32_DiskDriveToDiskPartition" -ComputerName $hostName -Credential $cred
   foreach ($partition in $partitions)
   {
 	$partitionID = $Partition.DeviceID
-	$logicalDisk = Get-WmiObject -query "Associators of {Win32_DiskPartition.DeviceID=""$partitionID""} WHERE AssocClass = Win32_LogicalDiskToPartition" -ComputerName $vmName -Credential $cred
+	$logicalDisk = Get-WmiObject -query "Associators of {Win32_DiskPartition.DeviceID=""$partitionID""} WHERE AssocClass = Win32_LogicalDiskToPartition" -ComputerName $hostName -Credential $cred
 	
 	#generate a result  
     $result = "" | select vmName,
@@ -136,11 +145,14 @@ foreach ($vmHardDisk in $vmHardDisks)
 }  
   
 #sort and then output the results  
-if($outputDir)
+$results = $results | sort {[int]$_.vmHardDiskName.split(' ')[2]}  
+if(-not $outputDir -eq "")
 {
   $outputFile = "${vmName}_drive_matches.csv"
   $outputFilePath = Join-Path $outputDir $outputFile
   $results | export-csv -path $outputFilePath
 }
-$results = $results | sort {[int]$_.vmHardDiskName.split(' ')[2]}  
-$results | ft -AutoSize  
+$results | ft -AutoSize
+Write-Host "Press any key to close"
+[void][System.Console]::ReadKey($true)
+Exit
