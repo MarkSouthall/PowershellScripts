@@ -27,7 +27,7 @@
 	
     .NOTES
     Name:           vHDDToWindowsDisk.ps1
-    Version:        1.3
+    Version:        1.4
     Author:         Mark Southall
 
     .LINK
@@ -123,25 +123,21 @@ foreach ($vmHardDisk in $vmHardDisks)
 							vmHardDiskDatastore,
 							vmHardDiskVmdk,
 							vmHardDiskName,
+							vmDiskSize,
+							winDiskSize,
+							winLogicalDiskSize,
 							driveLetter,
 							driveName,
-							#windowsDiskIndex,
-							#windowsDiskSerialNumber,
-							#vmHardDiskUuid,
-							#windowsDiskAltSerialNumber,
-							#vmHardDiskScsiCanonicalName,
 							scsiID
     $result.vmName = $vmName.toupper()  
     $result.vmHardDiskDatastore = $vmHardDisk.filename.split(']')[0].split('[')[1]  
     $result.vmHardDiskVmdk = $vmHardDisk.filename.split(']')[1].trim()  
     $result.vmHardDiskName = $vmHardDisk.Name  
+	$result.vmDiskSize = $vmHardDisk.CapacityGB
+	$result.winDiskSize = [decimal]::round($windowsDisk.Size/1gb)
+	$result.winLogicalDiskSize = [decimal]::round($logicalDisk.Size/1gb)
 	$result.driveLetter = $logicalDisk.Caption
 	$result.driveName = $logicalDisk.VolumeName
-    #$result.windowsDiskIndex = if ($windowsDisk){$windowsDisk.Index}else{"FAILED TO MATCH"}  
-    #$result.windowsDiskSerialNumber = if ($windowsDisk){$windowsDisk.SerialNumber}else{"FAILED TO MATCH"}  
-    #$result.vmHardDiskUuid = $vmHardDiskUuid  
-    #$result.windowsDiskAltSerialNumber = if ($windowsDisk){$windowsDisk.AltSerialNumber}else{"FAILED TO MATCH"}  
-    #$result.vmHardDiskScsiCanonicalName = $vmHardDisk.ScsiCanonicalName  
     $result.scsiID = $scsiID
     $results += $result  
   }
