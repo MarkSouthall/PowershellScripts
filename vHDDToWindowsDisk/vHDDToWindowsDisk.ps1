@@ -27,7 +27,7 @@
 	
     .NOTES
     Name:           vHDDToWindowsDisk.ps1
-    Version:        1.5
+    Version:        1.6
     Author:         Mark Southall
 
     .LINK
@@ -55,7 +55,7 @@ Param (
 
 try{
 	Write-Host "Attempting to import VMware.PowerCLI..."
-	Import-Module -Name "VMware.PowerCLI2" -ErrorAction Stop
+	Import-Module -Name "VMware.PowerCLI" -ErrorAction Stop
 }catch{
 	Write-Host "PowerCLI module not found, attempting Vmware.VimAutomation.Core..."
 	try{
