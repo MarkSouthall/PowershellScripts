@@ -27,7 +27,7 @@
 	
     .NOTES
     Name:           vHDDToWindowsDisk.ps1
-    Version:        1.4
+    Version:        1.5
     Author:         Mark Southall
 
     .LINK
@@ -53,7 +53,20 @@ Param (
   [string]$outputDir
 )
 
-Add-PSSnapin "Vmware.VimAutomation.Core" 
+try{
+	Write-Host "Attempting to import VMware.PowerCLI..."
+	Import-Module -Name "VMware.PowerCLI2" -ErrorAction Stop
+}catch{
+	Write-Host "PowerCLI module not found, attempting Vmware.VimAutomation.Core..."
+	try{
+		Add-PSSnapin "Vmware.VimAutomation.Core" -ErrorAction Stop
+	}catch{
+		Write-Host "Unable to load Powershell modules - please remove any existing PowerCLI installation, and run the following from an elevated Powershell prompt: Install-Module -Name VMware.PowerCLI -Force -AllowClobber"
+		[void][System.Console]::ReadKey($true)
+		Exit
+	}
+}
+
 $cred = if ($cred){$cred}else{Get-Credential}  
 Connect-VIServer -Server $vCenter -Credential $cred
 
